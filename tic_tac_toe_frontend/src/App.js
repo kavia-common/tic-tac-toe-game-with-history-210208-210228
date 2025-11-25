@@ -1,6 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
-import { startGame, makeMove, listGames } from './api';
+import ConfigStatus from './ConfigStatus';
+
+// Lazily import API to allow the UI to render a helpful banner if configuration is missing.
+let apiError = '';
+let startGame, makeMove, listGames;
+try {
+  // eslint-disable-next-line global-require
+  const api = require('./api');
+  startGame = api.startGame;
+  makeMove = api.makeMove;
+  listGames = api.listGames;
+} catch (e) {
+  apiError = e?.message || 'API not available due to configuration error.';
+}
 
 // Colors per Ocean Professional theme
 const colors = {
@@ -163,6 +176,10 @@ function App() {
             <h2>Game</h2>
             <div className="status">{statusText}</div>
           </div>
+          {/* Configuration status banner when API base is missing or misconfigured */}
+          {apiError && (
+            <ConfigStatus message={`${apiError} (Set REACT_APP_API_BASE in .env and run npm start or npm run build again.)`} />
+          )}
           {error && <div className="alert error">{error}</div>}
           <Board
             board={state?.board || Array(9).fill('')}

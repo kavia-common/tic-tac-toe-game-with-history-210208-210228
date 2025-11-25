@@ -9,12 +9,16 @@ This app provides the user interface for playing Tic Tac Toe and viewing finishe
 
 ## Configuration (.env)
 
-Create a `.env` file (already provided) with:
+Create a `.env` file (you can copy from `.env.example`) with:
 ```
 REACT_APP_API_BASE=http://localhost:3001
 ```
 
-- `REACT_APP_API_BASE`: The base URL of the Tic Tac Toe backend. For local development, the backend runs on port 3001.
+- `REACT_APP_API_BASE`: The base URL of the Tic Tac Toe backend.
+  - Local development: `http://localhost:3001`
+  - Preview/production: Set to your backend preview URL (example: `https://<your-preview-host>:3001`)
+
+If `REACT_APP_API_BASE` is not set, the UI will display a clear banner and the API module will throw at load time. This is intentional so misconfiguration is obvious in production builds.
 
 ## Run locally
 
@@ -42,8 +46,10 @@ You can switch the backend to in-memory mode by unsetting `DATABASE_URL` before 
 
 ## Production build
 
+Before building, ensure your `.env` contains the correct `REACT_APP_API_BASE` for your target environment.
+
 ```
 npm run build
 ```
 
-This creates an optimized build in the `build/` directory.
+Then deploy the `build/` directory. If you change `REACT_APP_API_BASE`, rebuild the app so the new value is embedded in the bundle.
