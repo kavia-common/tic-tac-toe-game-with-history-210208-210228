@@ -1,82 +1,49 @@
-# Lightweight React Template for KAVIA
+# Tic Tac Toe Frontend (React)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+This app provides the user interface for playing Tic Tac Toe and viewing finished game history. It communicates with the backend REST API.
 
-## Features
+## Prerequisites
 
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+- Node.js 18+ and npm or yarn
+- Backend running locally on http://localhost:3001 (see backend README)
 
-## Getting Started
+## Configuration (.env)
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-### `npm test`
-
-Launches the test runner in interactive watch mode.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-## Customization
-
-### Colors
-
-The main brand colors are defined as CSS variables in `src/App.css`:
-
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
+Create a `.env` file (already provided) with:
+```
+REACT_APP_API_BASE=http://localhost:3001
 ```
 
-### Components
+- `REACT_APP_API_BASE`: The base URL of the Tic Tac Toe backend. For local development, the backend runs on port 3001.
 
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
+## Run locally
 
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
+Using npm:
+```
+npm install
+npm start
+```
 
-## Learn More
+Using yarn:
+```
+yarn
+yarn start
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The app will start at:
+- http://localhost:3000
 
-### Code Splitting
+Ensure the backend is running and that `REACT_APP_API_BASE` points to it.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Notes on Persistence
 
-### Analyzing the Bundle Size
+By default, the backend uses SQLite with `DATABASE_URL=sqlite:///./tictactoe.db`. This means your game history persists between runs.
+You can switch the backend to in-memory mode by unsetting `DATABASE_URL` before starting the backend for ephemeral sessions.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Production build
 
-### Making a Progressive Web App
+```
+npm run build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This creates an optimized build in the `build/` directory.
