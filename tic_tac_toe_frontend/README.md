@@ -20,6 +20,11 @@ REACT_APP_API_BASE=http://localhost:3001
 
 If `REACT_APP_API_BASE` is not set, the UI will display a clear banner and the API module will throw at load time. This is intentional so misconfiguration is obvious in production builds.
 
+During startup/build the resolved `REACT_APP_API_BASE` is logged in the browser console as:
+[TicTacToe][API] Resolved REACT_APP_API_BASE: <value>
+
+If the API origin differs from the app origin (host/port/scheme), a non-fatal banner warns about potential CORS or mixed-content issues. Ensure the backend CORS_ORIGINS includes the exact app origin (e.g., https://your-frontend-host:3000).
+
 ## Run locally
 
 Using npm:

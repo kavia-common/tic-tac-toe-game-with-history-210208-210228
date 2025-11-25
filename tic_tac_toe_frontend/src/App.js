@@ -180,6 +180,25 @@ function App() {
           {apiError && (
             <ConfigStatus message={`${apiError} (Set REACT_APP_API_BASE in .env and run npm start or npm run build again.)`} />
           )}
+          {/* Non-fatal warning when API base appears to be on a different origin/scheme than the app */}
+          {!apiError && typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE && (() => {
+            try {
+              const apiUrl = new URL(process.env.REACT_APP_API_BASE, window.location.href);
+              const apiOrigin = apiUrl.origin;
+              const pageOrigin = window.location.origin;
+              const schemeMismatch = apiUrl.protocol !== window.location.protocol;
+              if (apiOrigin !== pageOrigin || schemeMismatch) {
+                return (
+                  <ConfigStatus
+                    message={`Warning: API origin ${apiOrigin} differs from app origin ${pageOrigin}. Ensure backend CORS includes ${pageOrigin} and avoid mixed-content (protocol mismatch).`}
+                  />
+                );
+              }
+            } catch (_) {
+              // ignore URL parse errors
+            }
+            return null;
+          })()}
           {error && <div className="alert error">{error}</div>}
           <Board
             board={state?.board || Array(9).fill('')}
