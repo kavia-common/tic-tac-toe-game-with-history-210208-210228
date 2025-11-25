@@ -15,7 +15,7 @@ test('renders core UI components for Tic Tac Toe app', () => {
   expect(buttons.length).toBeGreaterThan(0);
 
   // Game section header
-  expect(screen.getByRole('heading', { name: /Game/i })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /Game/i, level: 2 })).toBeInTheDocument();
 
   // Status area shows initial prompt
   expect(screen.getByText(/Click "New Game" to start\./i)).toBeInTheDocument();
