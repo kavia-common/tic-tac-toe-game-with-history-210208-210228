@@ -108,6 +108,8 @@ function App() {
     setLoading(true);
     setError('');
     try {
+      // eslint-disable-next-line no-console
+      console.debug('[TicTacToe][UI] New Game clicked. About to call startGame(). Env base:', (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE) || '(undefined)', 'Runtime base:', (typeof window !== 'undefined' && window.__APP_CONFIG__ && window.__APP_CONFIG__.REACT_APP_API_BASE) || '(undefined)');
       const res = await startGame();
       setGameId(res.game_id);
       setState(res.state);

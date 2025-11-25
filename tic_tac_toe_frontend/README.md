@@ -25,6 +25,20 @@ During startup/build the resolved `REACT_APP_API_BASE` is logged in the browser 
 
 If the API origin differs from the app origin (host/port/scheme), a non-fatal banner warns about potential CORS or mixed-content issues. Ensure the backend CORS_ORIGINS includes the exact app origin (e.g., https://your-frontend-host:3000).
 
+### Runtime configuration fallback (no-rebuild deployments)
+If you cannot rebuild the frontend, you can provide a runtime configuration file:
+- Edit `public/config.json` before serving the app and set:
+  ```
+  {
+    "REACT_APP_API_BASE": "https://your-backend-host:3001"
+  }
+  ```
+- The app loads this file at startup and will use it if `process.env.REACT_APP_API_BASE` is undefined.
+- The resolved values are logged in the console under tags:
+  - `[TicTacToe][Startup] process.env.REACT_APP_API_BASE: ...`
+  - `[TicTacToe][Startup] window.__APP_CONFIG__?.REACT_APP_API_BASE: ...`
+  - `[TicTacToe][API] Resolved REACT_APP_API_BASE (...): ...`
+
 ## Run locally
 
 Using npm:
@@ -57,4 +71,4 @@ Before building, ensure your `.env` contains the correct `REACT_APP_API_BASE` fo
 npm run build
 ```
 
-Then deploy the `build/` directory. If you change `REACT_APP_API_BASE`, rebuild the app so the new value is embedded in the bundle.
+Then deploy the `build/` directory. If you change `REACT_APP_API_BASE`, rebuild the app so the new value is embedded in the bundle. Alternatively, set `public/config.json` to override at runtime if rebuild isn't feasible.

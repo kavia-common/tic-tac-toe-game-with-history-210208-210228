@@ -3,21 +3,35 @@
  * PUBLIC_INTERFACE
  */
 
-// Read API base URL strictly from environment at module load time.
-// In development, show a helpful console error; in production, throw so misconfiguration is visible.
+// Read API base URL from environment at module load time.
+// Also support a runtime fallback from window.__APP_CONFIG__.REACT_APP_API_BASE
 const apiBaseFromEnv =
   typeof process !== 'undefined' && process.env ? process.env.REACT_APP_API_BASE : undefined;
+
+const apiBaseFromRuntime =
+  typeof window !== 'undefined' &&
+  window.__APP_CONFIG__ &&
+  window.__APP_CONFIG__.REACT_APP_API_BASE
+    ? window.__APP_CONFIG__.REACT_APP_API_BASE
+    : undefined;
 
 // Visible log of the resolved API base to assist with debugging in preview/prod
 // eslint-disable-next-line no-console
 console.log(
-  '[TicTacToe][API] Resolved REACT_APP_API_BASE:',
+  '[TicTacToe][API] Resolved REACT_APP_API_BASE (env):',
   apiBaseFromEnv || '(undefined)'
 );
+// eslint-disable-next-line no-console
+console.log(
+  '[TicTacToe][API] Resolved REACT_APP_API_BASE (runtime config):',
+  apiBaseFromRuntime || '(undefined)'
+);
 
-if (!apiBaseFromEnv) {
+const resolvedBase = apiBaseFromEnv || apiBaseFromRuntime;
+
+if (!resolvedBase) {
   const msg =
-    'Configuration error: REACT_APP_API_BASE is not defined. Set it in your .env file (e.g., REACT_APP_API_BASE=http://localhost:3001) and rebuild.';
+    'Configuration error: REACT_APP_API_BASE is not defined. Set it in your .env and rebuild, or provide public/config.json with {"REACT_APP_API_BASE": "<url>"} before serving.';
   // Always surface to console for easier diagnosis
   // eslint-disable-next-line no-console
   console.error(msg);
@@ -27,7 +41,7 @@ if (!apiBaseFromEnv) {
 }
 
 // Normalize any trailing slash to avoid double slashes in composed URLs
-const API_BASE = String(apiBaseFromEnv).replace(/\/+$/, '');
+const API_BASE = String(resolvedBase).replace(/\/*$/, '');
 
 // Internal helper to make requests with consistent error handling
 async function request(path, options = {}) {
@@ -49,7 +63,7 @@ async function request(path, options = {}) {
     res = await fetch(url, merged);
   } catch (e) {
     // Network error likely due to CORS, DNS, or mixed content
-    const base = apiBaseFromEnv || 'undefined';
+    const base = resolvedBase || 'undefined';
     const sameOrigin = typeof window !== 'undefined'
       ? new URL(base, window.location.href).origin === window.location.origin
       : false;
@@ -86,12 +100,16 @@ async function request(path, options = {}) {
 // PUBLIC_INTERFACE
 export async function startGame() {
   /** Starts a new game and returns { game_id, state } */
+  // eslint-disable-next-line no-console
+  console.debug('[TicTacToe][API] startGame -> base:', API_BASE);
   return request('/games', { method: 'POST' });
 }
 
 // PUBLIC_INTERFACE
 export async function makeMove(gameId, index, player) {
   /** Makes a move at index for player and returns updated { game_id, state } */
+  // eslint-disable-next-line no-console
+  console.debug('[TicTacToe][API] makeMove -> base:', API_BASE, 'gameId:', gameId, 'index:', index, 'player:', player);
   return request(`/games/${gameId}/moves`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -102,11 +120,15 @@ export async function makeMove(gameId, index, player) {
 // PUBLIC_INTERFACE
 export async function getGame(gameId) {
   /** Fetch a game state and history by id */
+  // eslint-disable-next-line no-console
+  console.debug('[TicTacToe][API] getGame -> base:', API_BASE, 'gameId:', gameId);
   return request(`/games/${gameId}`);
 }
 
 // PUBLIC_INTERFACE
 export async function listGames() {
   /** List finished games */
+  // eslint-disable-next-line no-console
+  console.debug('[TicTacToe][API] listGames -> base:', API_BASE);
   return request('/games');
 }
