@@ -17,6 +17,7 @@ function App() {
   const [status, setStatus] = useState('idle'); // idle | in_progress | X_won | O_won | draw
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorAction, setErrorAction] = useState(null); // for retry handler
   const [history, setHistory] = useState([]);
   const [selectedHistoryGame, setSelectedHistoryGame] = useState(null);
 
@@ -40,10 +41,15 @@ function App() {
     return String(status);
   }, [status, currentPlayer, gameId]);
 
+  const clearError = useCallback(() => {
+    setError('');
+    setErrorAction(null);
+  }, []);
+
   const handleStart = useCallback(async () => {
     setLoading(true);
-    setError('');
     setSelectedHistoryGame(null);
+    clearError();
     try {
       const g = await startGame();
       setGameId(g.id);
@@ -51,17 +57,21 @@ function App() {
       setCurrentPlayer(g.currentPlayer || 'X');
       setStatus(g.status || 'in_progress');
     } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('Start New Game failed', e);
       setError(e.message || 'Failed to start game');
+      // enable retry
+      setErrorAction(() => handleStart);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [clearError]);
 
   const handleSquareClick = useCallback(async (index) => {
     if (!gameId || isGameOver) return;
     if (board[index] !== null) return;
     setLoading(true);
-    setError('');
+    clearError();
     try {
       const g = await makeMove(gameId, index);
       setBoard(g.board || Array(9).fill(null));
@@ -72,19 +82,25 @@ function App() {
         refreshHistory();
       }
     } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('Make move failed', e);
       setError(e.message || 'Move failed');
+      // allow retrying the same move
+      setErrorAction(() => () => handleSquareClick(index));
     } finally {
       setLoading(false);
     }
-  }, [gameId, isGameOver, board, currentPlayer, status]);
+  }, [gameId, isGameOver, board, currentPlayer, status, clearError]);
 
   const refreshHistory = useCallback(async () => {
     try {
       const items = await getHistory();
       setHistory(Array.isArray(items) ? items : []);
     } catch (e) {
-      // Non-fatal
-      // optional: setError('Failed to fetch history')
+      // Non-fatal but log
+      // eslint-disable-next-line no-console
+      console.error('Failed to fetch history', e);
+      // Do not surface global error here to avoid noise
     }
   }, []);
 
@@ -98,10 +114,44 @@ function App() {
     try {
       const full = await getGame(g.id);
       setSelectedHistoryGame({ ...g, board: full.board || g.board });
-    } catch {
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to fetch game details', e);
       setSelectedHistoryGame(g);
     }
   }, []);
+
+  const ErrorBanner = ({ message, onRetry, onDismiss }) => {
+    if (!message) return null;
+    return (
+      <div
+        className="surface card"
+        style={{
+          borderColor: 'rgba(239,68,68,0.3)',
+          borderWidth: 1,
+          borderStyle: 'solid',
+          background: '#fff5f5',
+          marginBottom: 12,
+        }}
+        role="alert"
+        aria-live="assertive"
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
+          <span className="error-text">Error: {message}</span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {onRetry && (
+              <button className="btn secondary" onClick={onRetry} aria-label="Retry last action">
+                Retry
+              </button>
+            )}
+            <button className="btn ghost" onClick={onDismiss} aria-label="Dismiss error">
+              Dismiss
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="app-shell">
@@ -124,10 +174,10 @@ function App() {
 
       <main className="app-main">
         <section className="game-section">
+          <ErrorBanner message={error} onRetry={errorAction} onDismiss={clearError} />
           <div className="surface card">
             <div className="status-row" role="status" aria-live="polite">
               <span className="status-text">{statusText}</span>
-              {error && <span className="error-text" role="alert">Error: {error}</span>}
             </div>
 
             <Board
@@ -150,7 +200,7 @@ function App() {
                     setBoard(Array(9).fill(null));
                     setCurrentPlayer('X');
                     setStatus('idle');
-                    setError('');
+                    clearError();
                   }}
                   aria-label="Reset current board locally"
                 >

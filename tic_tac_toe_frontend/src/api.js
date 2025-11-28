@@ -1,32 +1,81 @@
-const BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+/**
+ * Resolve backend base URL safely with sensible default and normalization.
+ * Reads REACT_APP_BACKEND_URL when present; falls back to http://localhost:3001.
+ */
+function getBaseUrl() {
+  try {
+    const raw = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_BACKEND_URL)
+      ? process.env.REACT_APP_BACKEND_URL
+      : '';
+    const url = (raw && typeof raw === 'string' ? raw.trim() : '') || 'http://localhost:3001';
+    // Remove trailing slash to keep path joins predictable
+    return url.endsWith('/') ? url.slice(0, -1) : url;
+  } catch {
+    return 'http://localhost:3001';
+  }
+}
+
+const BASE_URL = getBaseUrl();
 
 /**
- * Helper to handle fetch with JSON and error handling.
- * Adds console.error for visibility in case of failures.
+ * Helper to handle fetch with JSON and robust error handling.
+ * Logs full error details including response status and body when available.
  */
 async function request(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-    ...options,
-  });
-  const contentType = res.headers.get('content-type') || '';
-  let data = null;
-  if (contentType.includes('application/json')) {
-    data = await res.json();
-  } else {
-    data = await res.text();
-  }
-  if (!res.ok) {
-    const message = data && data.detail ? data.detail : (typeof data === 'string' ? data : 'Request failed');
-    // Log for debugging network/CORS issues without crashing silently
+  const url = `${BASE_URL}${path}`;
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+      ...options,
+    });
+
+    const contentType = res.headers.get('content-type') || '';
+    let data = null;
+    try {
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        data = await res.text();
+      }
+    } catch (parseErr) {
+      // eslint-disable-next-line no-console
+      console.error('API response parse error', { url, contentType, parseErr });
+      data = null;
+    }
+
+    if (!res.ok) {
+      const message =
+        (data && typeof data === 'object' && 'detail' in data && data.detail) ||
+        (typeof data === 'string' && data) ||
+        `Request failed with status ${res.status}`;
+
+      // eslint-disable-next-line no-console
+      console.error('API request failed', {
+        url,
+        path,
+        status: res.status,
+        statusText: res.statusText,
+        responseBody: data,
+      });
+      const error = new Error(message);
+      error.status = res.status;
+      error.response = data;
+      throw error;
+    }
+
+    return data;
+  } catch (err) {
+    // Network/CORS or other fetch-level failure
     // eslint-disable-next-line no-console
-    console.error('API request failed', { path, status: res.status, data });
-    throw new Error(message);
+    console.error('API request error', { url, options, error: err && err.message, stack: err && err.stack });
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error('Network error');
   }
-  return data;
 }
 
 /**
