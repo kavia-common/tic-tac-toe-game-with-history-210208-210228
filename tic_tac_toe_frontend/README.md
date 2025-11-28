@@ -9,6 +9,27 @@ This project provides a minimal React template with a clean, modern UI and minim
 - **Fast**: Minimal dependencies for quick loading times
 - **Simple**: Easy to understand and modify
 
+## Environment configuration
+
+The frontend needs to know where the backend is running. Configure one of:
+
+- REACT_APP_API_BASE (preferred)
+- REACT_APP_BACKEND_URL
+
+Rules:
+- Must be a full origin with protocol + host (+ optional port).
+- Do not include a trailing slash.
+- For local dev, use: http://localhost:3001
+- For previews, set the exact backend preview origin (e.g. https://vscode-internal-XXXX.beta01.cloud.kavia.ai:3001)
+
+The app reads REACT_APP_API_BASE first, then REACT_APP_BACKEND_URL. If neither is set,
+it falls back to http://localhost:3001.
+
+To verify at runtime, open devtools console and call:
+window.t3 = require('./src/api'); // if module exposure is configured
+// Or temporarily log from inside the app:
+console.log('Backend base URL', __debug_getBaseUrlForDiagnostics());
+
 ## Getting Started
 
 In the project directory, you can run:

@@ -1,15 +1,32 @@
 /**
  * Resolve backend base URL safely with sensible default and normalization.
- * Reads REACT_APP_BACKEND_URL when present; falls back to http://localhost:3001.
+ * Order of precedence:
+ * 1) REACT_APP_API_BASE (some environments supply this)
+ * 2) REACT_APP_BACKEND_URL
+ * 3) http://localhost:3001 (dev default)
+ *
+ * Ensure value includes protocol + host (+ port) and no trailing slash.
  */
 function getBaseUrl() {
   try {
-    const raw = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_BACKEND_URL)
-      ? process.env.REACT_APP_BACKEND_URL
-      : '';
-    const url = (raw && typeof raw === 'string' ? raw.trim() : '') || 'http://localhost:3001';
+    const env = (typeof process !== 'undefined' && process.env) ? process.env : {};
+    const raw =
+      (env.REACT_APP_API_BASE && String(env.REACT_APP_API_BASE).trim()) ||
+      (env.REACT_APP_BACKEND_URL && String(env.REACT_APP_BACKEND_URL).trim()) ||
+      '';
+
+    const fallback = 'http://localhost:3001';
+    const base = raw || fallback;
+
     // Remove trailing slash to keep path joins predictable
-    return url.endsWith('/') ? url.slice(0, -1) : url;
+    const normalized = base.endsWith('/') ? base.slice(0, -1) : base;
+
+    // Basic sanity: ensure it looks like an absolute URL with protocol
+    if (!/^https?:\/\//i.test(normalized)) {
+      // If an origin without protocol was passed, default to http
+      return `http://${normalized.replace(/^\/+/, '')}`;
+    }
+    return normalized;
   } catch {
     return 'http://localhost:3001';
   }
@@ -21,6 +38,10 @@ const BASE_URL = getBaseUrl();
  * Helper to handle fetch with JSON and robust error handling.
  * Logs full error details including response status and body when available.
  */
+export function __debug_getBaseUrlForDiagnostics() {
+  return BASE_URL;
+}
+
 async function request(path, options = {}) {
   const url = `${BASE_URL}${path}`;
   try {
