@@ -52,14 +52,21 @@ function App() {
     clearError();
     try {
       const g = await startGame();
-      setGameId(g.id);
-      setBoard(g.board || Array(9).fill(null));
-      setCurrentPlayer(g.currentPlayer || 'X');
-      setStatus(g.status || 'in_progress');
+      // Safely derive a new game id from response
+      const newId = (g && (g.id ?? g.gameId)) || null;
+      if (!newId) {
+        setError('Failed to start a new game.');
+        setLoading(false);
+        return;
+      }
+      setGameId(newId);
+      setBoard(Array.isArray(g?.board) ? g.board : Array(9).fill(null));
+      setCurrentPlayer(g?.currentPlayer ?? 'X');
+      setStatus(g?.status ?? 'in_progress');
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error('Start New Game failed', e);
-      setError(e.message || 'Failed to start game');
+      setError(e?.message || 'Failed to start game');
       // enable retry
       setErrorAction(() => handleStart);
     } finally {
