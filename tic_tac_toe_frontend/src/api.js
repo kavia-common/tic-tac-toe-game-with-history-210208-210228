@@ -34,6 +34,14 @@ function getBaseUrl() {
 
 const BASE_URL = getBaseUrl();
 
+// One-time init log for diagnostics
+/* eslint-disable no-console */
+if (typeof window !== 'undefined' && !window.__ttt_base_logged) {
+  console.info('[TicTacToe] Backend base URL:', BASE_URL);
+  window.__ttt_base_logged = true;
+}
+/* eslint-enable no-console */
+
 /**
  * Helper to handle fetch with JSON and robust error handling.
  * Logs full error details including response status and body when available.
